@@ -538,11 +538,33 @@ const rules = [
     find({ code }) {
       // SF Symbols are often derived from "sparkle"/"sparkles" or
       // "wand.and.stars"/"wand.and.sparkles", for example
-      // "sparkles.rectangle.stack" and "wand.and.stars.inverse". Match the
-      // quoted symbol name as a whole so substrings such as "sparkles_count"
-      // stay quiet.
-      const re = /["'](?:sparkles?(?:\.[a-z0-9._-]+)?|wand\.and\.(?:stars|sparkles)(?:\.[a-z0-9._-]+)?)["']|\bauto_awesome\b|\bAutoAwesome\b|\bSparkles\b|\bSparklesIcon\b|\bSparkle\b|\bSparkleIcon\b|\bWandSparkles\b|\bWandSparklesIcon\b|✨/;
-      return [...matches(re, code)].map((m) => m.index);
+      // "sparkles.rectangle.stack" and "wand.and.stars.inverse". Check the
+      // complete string literal so a quoted symbol is only flagged when the
+      // literal is exactly that symbol; substrings and apostrophes inside
+      // longer text stay quiet.
+      const symbol = /^(?:sparkles?(?:\.[a-z0-9._-]+)?|wand\.and\.(?:stars|sparkles)(?:\.[a-z0-9._-]+)?)$/;
+      const re = /\bauto_awesome\b|\bAutoAwesome\b|\bSparkles\b|\bSparklesIcon\b|\bSparkle\b|\bSparkleIcon\b|\bWandSparkles\b|\bWandSparklesIcon\b|✨/;
+      const hits = [...matches(re, code)].map((m) => m.index);
+
+      for (let start = 0; start < code.length; start++) {
+        const quote = code[start];
+        if (quote !== '"' && quote !== "'") continue;
+
+        let end = start + 1;
+        while (end < code.length && code[end] !== quote) {
+          if (code[end] === "\\") {
+            end += 2;
+          } else {
+            end++;
+          }
+        }
+        if (code[end] !== quote) break;
+
+        if (symbol.test(code.slice(start + 1, end))) hits.push(start);
+        start = end;
+      }
+
+      return hits.sort((a, b) => a - b);
     },
   },
   {
