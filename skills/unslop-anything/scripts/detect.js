@@ -139,6 +139,18 @@ function blankComments(text, stack) {
       i = skipRegex(text, i);
       continue;
     }
+    if (stack === "swift" && c === '"') {
+      // Swift raw strings use #"..."# (or more hashes). Quotes and // inside
+      // them are literal text, not delimiters or comments.
+      let hashes = 0;
+      while (text[i - 1 - hashes] === "#") hashes++;
+      if (hashes > 0) {
+        const closing = '"' + "#".repeat(hashes);
+        const end = text.indexOf(closing, i + 1);
+        i = end === -1 ? text.length : end + closing.length;
+        continue;
+      }
+    }
     if (c === '"' || c === "`" || (c === "'" && stack !== "swift")) {
       // An apostrophe between letters is prose (JSX text such as Don't), not a string.
       if (c === "'" && /[A-Za-z]/.test(text[i - 1] || "") && /[A-Za-z]/.test(next || "")) { i++; continue; }

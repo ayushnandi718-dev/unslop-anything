@@ -3,7 +3,7 @@
 const test = require("node:test");
 const assert = require("node:assert");
 const path = require("path");
-const { scan, scanSource, rules, isSlopHue, main } = require("../skills/unslop-anything/scripts/detect.js");
+const { scan, scanSource, rules, isSlopHue, main, blankComments } = require("../skills/unslop-anything/scripts/detect.js");
 
 const fixtures = path.join(__dirname, "fixtures");
 const rulesIn = (file) => new Set(scan([path.join(fixtures, "slop", file)]).findings.map((f) => f.rule));
@@ -1015,6 +1015,16 @@ test("sparkle-icon scans nested Swift interpolation and raw strings", () => {
 
   const prose = "let label = #\"Use \"'sparkles'\" as text\"#";
   assert.deepStrictEqual(scanSource(prose, "a.swift"), []);
+});
+
+test("blankComments keeps slashes inside Swift raw strings and still finds later symbols", () => {
+  const src = [
+    'let label = #"A "// B"#',
+    'let icon = Image(systemName: "sparkles")',
+  ].join("\n");
+
+  assert.ok(blankComments(src, "swift").includes("// B"));
+  assert.deepStrictEqual(scanSource(src, "a.swift").map((f) => f.rule), ["sparkle-icon"]);
 });
 
 test("glow-shadow flags #0000ff and a saturated second color in a shadow list, but not whole-black or neutral-only lists", () => {
