@@ -536,10 +536,12 @@ const rules = [
     message: "Sparkle icon. It usually marks an AI feature or stands in for meaning.",
     fix: "Use an icon that names the action, or a text label. If it marks an AI feature, make sure that feature is not in the way of the core task.",
     find({ code }) {
-      // SF Symbols are often derived from "sparkle"/"sparkles", for example
-      // "sparkles.rectangle.stack" and "wand.and.sparkles". Match the quoted
-      // symbol name as a whole so substrings such as "sparkles_count" stay quiet.
-      const re = /["'](?:sparkles?(?:\.[a-z0-9._-]+)?|wand\.and\.(?:stars|sparkles))["']|\bauto_awesome\b|\bAutoAwesome\b|\bSparkles\b|\bSparklesIcon\b|\bSparkle\b|\bSparkleIcon\b|\bWandSparkles\b|\bWandSparklesIcon\b|✨/;
+      // SF Symbols are often derived from "sparkle"/"sparkles" or
+      // "wand.and.stars"/"wand.and.sparkles", for example
+      // "sparkles.rectangle.stack" and "wand.and.stars.inverse". Match the
+      // quoted symbol name as a whole so substrings such as "sparkles_count"
+      // stay quiet.
+      const re = /["'](?:sparkles?(?:\.[a-z0-9._-]+)?|wand\.and\.(?:stars|sparkles)(?:\.[a-z0-9._-]+)?)["']|\bauto_awesome\b|\bAutoAwesome\b|\bSparkles\b|\bSparklesIcon\b|\bSparkle\b|\bSparkleIcon\b|\bWandSparkles\b|\bWandSparklesIcon\b|✨/;
       return [...matches(re, code)].map((m) => m.index);
     },
   },
