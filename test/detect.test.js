@@ -973,6 +973,27 @@ test("sparkle-icon flags the singular and combined icon names", () => {
   assert.deepStrictEqual(rulesFor("<SparkleCounter />\n"), []);
 });
 
+test("sparkle-icon flags sparkle-derived SF Symbols but not words containing sparkles", () => {
+  const src = [
+    "import SwiftUI",
+    "struct A: View {",
+    "  var body: some View {",
+    "    VStack {",
+    '      Image(systemName: "wand.and.sparkles")',
+    '      Label("Summarize", systemImage: "sparkles.rectangle.stack")',
+    '      Image(systemName: "sparkle")',
+    '      Image(systemName: "sparkles")',
+    '      Image(systemName: "wand.and.stars")',
+    "    }",
+    "  }",
+    "}",
+    'let quietSymbols = ["sparkles_count", "no sparkles here"]',
+  ].join("\n");
+
+  const findings = scanSource(src, "a.swift").filter((f) => f.rule === "sparkle-icon");
+  assert.deepStrictEqual(findings.map((f) => f.line), [5, 6, 7, 8, 9]);
+});
+
 test("glow-shadow flags #0000ff and a saturated second color in a shadow list, but not whole-black or neutral-only lists", () => {
   const flagged = [
     '<div className="shadow-[0_0_40px_#0000ff]">x</div>',
