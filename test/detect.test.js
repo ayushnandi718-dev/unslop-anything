@@ -999,6 +999,24 @@ test("sparkle-icon flags sparkle-derived SF Symbols but not words containing spa
   assert.deepStrictEqual(findings.map((f) => f.line), [5, 6, 7, 8, 9, 10, 11]);
 });
 
+test("sparkle-icon ignores prose apostrophes but still scans later literals", () => {
+  const doubleQuote = 'const view = <><p>Don\'t forget</p><Icon name="sparkles" /></>;';
+  const singleQuote = "const view = <><p>Don't forget</p><Icon name='sparkles' /></>;";
+  for (const src of [doubleQuote, singleQuote]) {
+    assert.deepStrictEqual(scanSource(src, "a.tsx").map((f) => f.rule), ["sparkle-icon"]);
+  }
+});
+
+test("sparkle-icon scans nested Swift interpolation and raw strings", () => {
+  const interpolation = "let label = \"Icon: \\(Image(systemName: \"sparkles\"))\"";
+  assert.deepStrictEqual(scanSource(interpolation, "a.swift").map((f) => f.rule), ["sparkle-icon"]);
+
+  assert.deepStrictEqual(scanSource('let icon = #"sparkles"#', "a.swift").map((f) => f.rule), ["sparkle-icon"]);
+
+  const prose = "let label = #\"Use \"'sparkles'\" as text\"#";
+  assert.deepStrictEqual(scanSource(prose, "a.swift"), []);
+});
+
 test("glow-shadow flags #0000ff and a saturated second color in a shadow list, but not whole-black or neutral-only lists", () => {
   const flagged = [
     '<div className="shadow-[0_0_40px_#0000ff]">x</div>',
